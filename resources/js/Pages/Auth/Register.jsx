@@ -8,6 +8,7 @@ import { Head, Link, useForm } from '@inertiajs/react';
 import {InputText} from "primereact/inputtext";
 import {Checkbox} from "primereact/checkbox";
 import {Button} from "primereact/button";
+import { Password } from 'primereact/password';
 
 export default function Register() {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -35,7 +36,7 @@ export default function Register() {
 
             <div className="flex align-items-center justify-content-center flex-column">
                 <img src="/images/logo/-dark.svg" alt="hyper" height={50} className="mb-3"/>
-                <div className="surface-card p-6 sm:p-4 shadow-2 border-round w-full lg:w-4">
+                <div className="surface-card p-6 sm:p-4 shadow-2 border-round w-full">
                     <div className="text-center mb-5">
                         <div className="text-900 text-3xl font-medium mb-3">Register</div>
                     </div>
@@ -68,25 +69,28 @@ export default function Register() {
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="password" className="block text-900 font-medium mb-2">Password</label>
-                                <InputText
+                                <Password
                                     id="password"
-                                    type="password"
                                     placeholder="Password"
                                     className="w-full"
+                                    inputClassName="w-full"
                                     value={data.password}
                                     onChange={(e) => setData('password', e.target.value)}
+                                    toggleMask
                                 />
                                 <InputError message={errors.password} className=""/>
                             </div>
                             <div className="mb-3">
                                 <label htmlFor="password_confirmation" className="block text-900 font-medium mb-2">Confirm Password</label>
-                                <InputText
+                                <Password
                                     id="password_confirmation"
-                                    type="password"
                                     placeholder="Confirm Password"
                                     className="w-full"
+                                    inputClassName="w-full"
+                                    feedback={false}
                                     value={data.password_confirmation}
                                     onChange={(e) => setData('password_confirmation', e.target.value)}
+                                    toggleMask
                                 />
                                 <InputError message={errors.password_confirmation} className=""/>
                             </div>

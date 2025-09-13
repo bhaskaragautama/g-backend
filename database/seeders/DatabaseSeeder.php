@@ -18,5 +18,8 @@ class DatabaseSeeder extends Seeder
         //     'name' => 'Test User',
         //     'email' => 'test@example.com',
         // ]);
+        $this->call(AreasTableSeeder::class);
+        $this->call(PostcodesTableSeeder::class);
+        $this->call(PrefecturesTableSeeder::class);
     }
 }
