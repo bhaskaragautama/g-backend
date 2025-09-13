@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CompanyStoreRequest;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -30,9 +31,10 @@ class CompanyController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CompanyStoreRequest $request)
     {
-        //
+        $company = Company::create($request->validated());
+        return redirect()->route('companies.index');
     }
 
     /**
@@ -48,7 +50,9 @@ class CompanyController extends Controller
      */
     public function edit(Company $company)
     {
-        //
+        return Inertia::render('Company/Form', [
+            'company' => $company
+        ]);
     }
 
     /**
