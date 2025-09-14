@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\CompanyStoreRequest;
 use App\Models\Company;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class CompanyController extends Controller
@@ -33,7 +36,30 @@ class CompanyController extends Controller
      */
     public function store(CompanyStoreRequest $request)
     {
-        $company = Company::create($request->validated());
+        DB::beginTransaction();
+        try {
+            $company = Company::create($request->validated());
+
+            if ($request->hasFile('image')) {
+                $image = $request->file('image');
+                $imageName = 'Image_' . $company->id . '.' . $image->getClientOriginalExtension();
+                $path = $image->storeAs('public/company_images', $imageName);
+                if (!$path) {
+                    throw new Exception('Image upload failed');
+                }
+                $company->image = $path;
+                $company->save();
+            }
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Company creation failed: ' . $e->getMessage(), [
+                'exception' => $e,
+                'request' => $request->all(),
+                'company_id' => isset($company) ? $company->id : null,
+            ]);
+            return redirect()->back()->withErrors(['error' => 'Failed to create company.']);
+        }
+        DB::commit();
         return redirect()->route('companies.index');
     }
 
@@ -50,6 +76,7 @@ class CompanyController extends Controller
      */
     public function edit(Company $company)
     {
+
         return Inertia::render('Company/Form', [
             'company' => $company
         ]);
