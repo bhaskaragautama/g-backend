@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Layout from "@/Layouts/layout/layout";
 import { BreadCrumb } from "primereact/breadcrumb";
 import { InputText } from "primereact/inputtext";
@@ -9,19 +9,21 @@ import { fetchAddressByPostcode } from "@/Services/postcode";
 import { Toast } from "primereact/toast";
 import { InputMask } from "primereact/inputmask";
 import { InputTextarea } from "primereact/inputtextarea";
+import { Divider } from "primereact/divider";
+import { OverlayPanel } from "primereact/overlaypanel";
 
 const Form = (props) => {
-    console.log(route().current());
-    console.log(route().params);
     // Determine if we are in edit mode based on the presence of a company prop
     const isEdit = !!props.company;
 
     const toast = useRef(null);
 
+    const op = useRef(null);
+
     // Breadcrumb items
     const items = [
         { label: "Companies", url: "/companies" },
-        { label: "Create", url: false },
+        { label: isEdit ? "Edit" : "Create", url: false },
     ];
     const home = { icon: "pi pi-home", url: "/dashboard" };
 
@@ -29,30 +31,36 @@ const Form = (props) => {
     const [prefectureName, setPrefectureName] = useState("");
 
     // Inertia form handling
-    const { data, setData, post, processing, errors, reset } = useForm(
-        props.company || {
-            name: "",
-            email: "",
-            prefecture_id: "",
-            phone: "",
-            postcode: "",
-            city: "",
-            local: "",
-            street_address: "",
-            business_hour: "",
-            regular_holiday: [],
-            image: null,
-            fax: "",
-            url: "",
-            license_number: "",
-        }
-    );
+    const { data, setData, post, put, processing, errors, reset } = useForm({
+        name: props.company ? props.company.name : "",
+        email: props.company ? props.company.email : "",
+        prefecture_id: props.company ? props.company.prefecture_id : "",
+        phone: props.company ? props.company.phone : "",
+        postcode: props.company ? props.company.postcode : "",
+        city: props.company ? props.company.city : "",
+        local: props.company ? props.company.local : "",
+        street_address: props.company ? props.company.street_address : "",
+        business_hour: props.company ? props.company.business_hour : "",
+        regular_holiday: props.company ? props.company.regular_holiday : "",
+        image: null,
+        fax: props.company ? props.company.fax : "",
+        url: props.company ? props.company.url : "",
+        license_number: props.company ? props.company.license_number : "",
+        // force put
+        _method: isEdit ? "PUT" : "POST",
+    });
 
     // Handle form submission
     const submit = (e) => {
         e.preventDefault();
         // Handle form submission logic here
-        post(route(isEdit ? "companies.update" : "companies.store"));
+        if (isEdit) {
+            post(route("companies.update", { company: props.company.id }), {
+                forceFormData: true,
+            });
+        } else {
+            post(route("companies.store"));
+        }
     };
 
     // Handle postcode search
@@ -97,12 +105,21 @@ const Form = (props) => {
         }
     }
 
+    // if edit, populate prefecture name
+    useEffect(() => {
+        if (isEdit) {
+            handleSearch();
+        }
+        // Only run once when isEdit becomes true
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isEdit]);
+
     return (
         <Layout>
             <Toast ref={toast} />
             <h1>Company Form</h1>
             <BreadCrumb model={items} home={home} className="mb-5" />
-            <div>
+            <div className="card p-fluid mb-5">
                 <form onSubmit={submit} encType="multipart/form-data">
                     <div className="mb-3">
                         <label
@@ -369,13 +386,48 @@ const Form = (props) => {
                         <input
                             type="file"
                             name="image"
+                            className="hidden"
                             id="image"
-                            accept="image/*"
                             onChange={(e) =>
                                 setData("image", e.target.files[0])
                             }
                         />
+                        <div className="flex gap-3 mb-2">
+                            <div>
+                                <Button
+                                    type="button"
+                                    label="Choose File"
+                                    onClick={() =>
+                                        document.getElementById("image").click()
+                                    }
+                                />
+                            </div>
+                            <div>
+                                {/* <Button
+                                    type="button"
+                                    label="Current Image"
+                                    className={isEdit ? "" : "hidden"}
+                                    severity="secondary"
+                                    onClick={(e) => op.current.toggle(e)}
+                                />
+                                <OverlayPanel ref={op}>
+                                    <img
+                                        src={`/storage/${data.image}`}
+                                        alt="Company Image"
+                                    ></img>
+                                </OverlayPanel> */}
+                            </div>
+                        </div>
+                        {/* <span>
+                            {isEdit && !data.image.name
+                                ? " No file chosen"
+                                : data.image
+                                ? ` ${data.image.name}`
+                                : " No file chosen"}
+                        </span> */}
+                        <InputError message={errors.image} className="" />
                     </div>
+                    <Divider />
                     <Button
                         type="submit"
                         label="Save"

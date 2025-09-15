@@ -36,6 +36,10 @@ class CompanyController extends Controller
      */
     public function store(CompanyStoreRequest $request)
     {
+        echo '<pre>';
+        print_r($request->all());
+        echo '</pre>';
+        exit;
         DB::beginTransaction();
         try {
             $company = Company::create($request->validated());
@@ -47,7 +51,7 @@ class CompanyController extends Controller
                 if (!$path) {
                     throw new Exception('Image upload failed');
                 }
-                $company->image = $path;
+                $company->image = 'company_images/' . $imageName;
                 $company->save();
             }
         } catch (Exception $e) {
@@ -76,7 +80,6 @@ class CompanyController extends Controller
      */
     public function edit(Company $company)
     {
-
         return Inertia::render('Company/Form', [
             'company' => $company
         ]);
@@ -87,7 +90,7 @@ class CompanyController extends Controller
      */
     public function update(Request $request, Company $company)
     {
-        //
+        dd($request->all());
     }
 
     /**

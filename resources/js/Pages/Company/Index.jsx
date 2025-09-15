@@ -54,7 +54,7 @@ const Index = ({ companies }) => {
     ];
 
     const handleEdit = (company) => {
-        router.visit(route("companies.edit", { company: company.id }));
+        router.visit(route("companies.edit", { company }));
     };
     return (
         <Layout>
