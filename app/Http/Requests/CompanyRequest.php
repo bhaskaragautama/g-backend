@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CompanyStoreRequest extends FormRequest
+class CompanyRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -21,7 +21,7 @@ class CompanyStoreRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => 'required|string|max:50',
             'email' => 'required|email|unique:companies,email',
             'prefecture_id' => 'required|exists:prefectures,id',
@@ -32,10 +32,18 @@ class CompanyStoreRequest extends FormRequest
             'street_address' => 'required|string|max:255',
             'business_hour' => 'required|string|max:255',
             'regular_holiday' => 'required|string|max:255',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'fax' => 'required|digits_between:9,15',
             'url' => 'required|url|max:255',
             'license_number' => 'required|string|max:50',
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['image'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
+        } elseif ($this->isMethod('put') || $this->isMethod('patch')) {
+            $rules['image'] = 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048';
+            $rules['email'] = 'required|email|unique:companies,email,' . $this->company->id;
+        }
+
+        return $rules;
     }
 }

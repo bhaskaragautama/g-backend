@@ -16,8 +16,10 @@ const Form = (props) => {
     // Determine if we are in edit mode based on the presence of a company prop
     const isEdit = !!props.company;
 
+    // Ref for toast notifications
     const toast = useRef(null);
 
+    // Ref for overlay panel
     const op = useRef(null);
 
     // Breadcrumb items
@@ -30,8 +32,13 @@ const Form = (props) => {
     // State for form elements
     const [prefectureName, setPrefectureName] = useState("");
 
+    // State to hold the old image filename if in edit mode
+    const [oldImage, setOldImage] = useState(
+        isEdit && props.company.image ? props.company.image : null
+    );
+
     // Inertia form handling
-    const { data, setData, post, put, processing, errors, reset } = useForm({
+    const { data, setData, post, processing, errors } = useForm({
         name: props.company ? props.company.name : "",
         email: props.company ? props.company.email : "",
         prefecture_id: props.company ? props.company.prefecture_id : "",
@@ -98,8 +105,6 @@ const Form = (props) => {
                 life: 3000,
             });
             setPrefectureName("");
-            // setCity("");
-            // setLocal("");
             setData("prefecture_id", "");
             console.error("Error fetching address:", error);
         }
@@ -110,8 +115,6 @@ const Form = (props) => {
         if (isEdit) {
             handleSearch();
         }
-        // Only run once when isEdit becomes true
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isEdit]);
 
     return (
@@ -178,7 +181,14 @@ const Form = (props) => {
                                 className="w-full"
                                 value={data.postcode}
                                 onChange={(e) => {
-                                    setData("postcode", e.target.value);
+                                    setData({
+                                        ...data,
+                                        postcode: e.target.value,
+                                        prefecture_id: "",
+                                        city: "",
+                                        local: "",
+                                    });
+                                    setPrefectureName("");
                                 }}
                                 onKeyDown={(e) => {
                                     if (e.key === "Enter") {
@@ -202,7 +212,7 @@ const Form = (props) => {
                             type="text"
                             placeholder="Prefecture"
                             className="w-full"
-                            readOnly
+                            disabled
                             value={prefectureName}
                         />
                     </div>
@@ -218,7 +228,7 @@ const Form = (props) => {
                             type="text"
                             placeholder="City"
                             className="w-full"
-                            readOnly
+                            disabled
                             value={data.city}
                         />
                         <InputError message={errors.city} className="" />
@@ -235,7 +245,7 @@ const Form = (props) => {
                             type="text"
                             placeholder="Local"
                             className="w-full"
-                            readOnly
+                            disabled
                             value={data.local}
                         />
                         <InputError message={errors.local} className="" />
@@ -269,6 +279,7 @@ const Form = (props) => {
                             className="block text-900 font-medium mb-2"
                         >
                             Business Hours
+                            <span className="text-red-500">*</span>
                         </label>
                         <InputMask
                             id="business_hour"
@@ -292,6 +303,7 @@ const Form = (props) => {
                             className="block text-900 font-medium mb-2"
                         >
                             Regular Holiday
+                            <span className="text-red-500">*</span>
                         </label>
                         <InputTextarea
                             id="regular_holiday"
@@ -343,6 +355,7 @@ const Form = (props) => {
                             className="block text-900 font-medium mb-2"
                         >
                             Website URL
+                            <span className="text-red-500">*</span>
                         </label>
                         <InputText
                             id="url"
@@ -360,6 +373,7 @@ const Form = (props) => {
                             className="block text-900 font-medium mb-2"
                         >
                             License Number
+                            <span className="text-red-500">*</span>
                         </label>
                         <InputText
                             id="license_number"
@@ -382,10 +396,16 @@ const Form = (props) => {
                             className="block text-900 font-medium mb-2"
                         >
                             Company Image
+                            {isEdit ? (
+                                ""
+                            ) : (
+                                <span className="text-red-500">*</span>
+                            )}
                         </label>
                         <input
                             type="file"
                             name="image"
+                            accept="image/*"
                             className="hidden"
                             id="image"
                             onChange={(e) =>
@@ -396,14 +416,18 @@ const Form = (props) => {
                             <div>
                                 <Button
                                     type="button"
-                                    label="Choose File"
+                                    label={
+                                        oldImage
+                                            ? "Change Image"
+                                            : "Upload Image"
+                                    }
                                     onClick={() =>
                                         document.getElementById("image").click()
                                     }
                                 />
                             </div>
                             <div>
-                                {/* <Button
+                                <Button
                                     type="button"
                                     label="Current Image"
                                     className={isEdit ? "" : "hidden"}
@@ -412,19 +436,16 @@ const Form = (props) => {
                                 />
                                 <OverlayPanel ref={op}>
                                     <img
-                                        src={`/storage/${data.image}`}
+                                        src={`/storage/${oldImage}`}
                                         alt="Company Image"
+                                        className="w-80 h-80 object-contain"
                                     ></img>
-                                </OverlayPanel> */}
+                                </OverlayPanel>
                             </div>
                         </div>
-                        {/* <span>
-                            {isEdit && !data.image.name
-                                ? " No file chosen"
-                                : data.image
-                                ? ` ${data.image.name}`
-                                : " No file chosen"}
-                        </span> */}
+                        <span>
+                            {data.image ? data.image.name : "No file chosen"}
+                        </span>
                         <InputError message={errors.image} className="" />
                     </div>
                     <Divider />
@@ -435,7 +456,6 @@ const Form = (props) => {
                         disabled={processing}
                     />
                 </form>
-                <pre>{JSON.stringify(data, null, 2)}</pre>
             </div>
         </Layout>
     );

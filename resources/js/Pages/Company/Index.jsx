@@ -1,12 +1,32 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Layout from "@/Layouts/layout/layout.jsx";
 import DataTable from "react-data-table-component";
 import { Button } from "primereact/button";
 import { InputText } from "primereact/inputtext";
 import { router } from "@inertiajs/react";
+import { ConfirmDialog, confirmDialog } from "primereact/confirmdialog";
+import { Toast } from "primereact/toast";
 
-const Index = ({ companies }) => {
+const Index = ({ companies, flash }) => {
+    // Ref for toast notifications
+    const toast = useRef(null);
+
+    // State for search term
     const [searchTerm, setSearchTerm] = useState("");
+
+    // Effect to show flash messages
+    useEffect(() => {
+        if (flash && toast.current) {
+            toast.current.show({
+                severity: flash.type,
+                summary: flash.type === "success" ? "Success" : "Error",
+                detail: flash.message,
+                life: 3000,
+            });
+        }
+    }, [flash]);
+
+    // Define columns for the DataTable
     const columns = [
         {
             name: "Name",
@@ -53,11 +73,45 @@ const Index = ({ companies }) => {
         },
     ];
 
+    // Handlers for edit and delete actions
     const handleEdit = (company) => {
         router.visit(route("companies.edit", { company }));
     };
+
+    const handleDelete = (company) => {
+        confirmDialog({
+            message: `Are you sure you want to delete ${company.name}?`,
+            header: "Confirmation",
+            icon: "pi pi-exclamation-triangle",
+            accept: () => {
+                router.delete(route("companies.destroy", { company }), {
+                    onSuccess: () => {
+                        // Show success toast or notification
+                        toast.current.show({
+                            severity: "success",
+                            summary: "Deleted",
+                            detail: `${company.name} has been deleted.`,
+                            life: 3000,
+                        });
+                    },
+                    onError: () => {
+                        // Show error toast or notification
+                        toast.current.show({
+                            severity: "error",
+                            summary: "Error",
+                            detail: `Failed to delete ${company.name}.`,
+                            life: 3000,
+                        });
+                    },
+                });
+            },
+        });
+    };
+
     return (
         <Layout>
+            <Toast ref={toast} />
+            <ConfirmDialog />
             <div className="p-4">
                 <div className="flex justify-between items-center mb-4">
                     <h1 className="text-2xl font-bold mb-0">Companies</h1>
